@@ -101,6 +101,9 @@ export class Updater {
   }
 
   private async sourceBlock(): Promise<string | null> {
+    // this fork carries its own changes: an upstream release would replace them. Update by
+    // rebasing the fork on upstream instead; HERDR_WEB_UPDATES=1 turns the updater back on.
+    if (process.env["HERDR_WEB_UPDATES"] !== "1") return "Updates are off in this fork. Rebase it on upstream instead.";
     const branch = await this.git("branch", "--show-current");
     if (branch !== "main" && !(branch === "" && this.options.pluginCheckout)) return "Switch the source checkout to main to update.";
     if (await this.git("status", "--porcelain", "--untracked-files=all")) return "The source checkout has local changes. Commit or move them before updating.";

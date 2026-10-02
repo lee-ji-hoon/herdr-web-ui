@@ -5,6 +5,9 @@ import { join } from "node:path";
 import { Updater, runCommand, type Release } from "./updater.ts";
 import { HERDR_SOCKET_PATH } from "../shared/protocol.ts";
 
+// the fork turns the updater off by default (server/updater.ts sourceBlock); these tests exercise it
+process.env["HERDR_WEB_UPDATES"] = "1";
+
 let directory: string, upstream: string, root: string, stateDir: string;
 let updater: Updater;
 const git = (cwd: string, ...args: string[]) => runCommand(cwd, ["git", ...args]);

@@ -33,7 +33,6 @@ import {
 import { ensurePushSubscription, pushSupported, removePushSubscription } from "./lib/push.ts";
 import { onNotificationTarget } from "./lib/notificationTarget.ts";
 import { useUpdates } from "./lib/updates.ts";
-import { UpdateNotice } from "./components/UpdateControls.tsx";
 import { FilesDialog } from "./components/FilesDialog.tsx";
 import { FileViewer } from "./components/FileViewer.tsx";
 import { OpenFileContext } from "./lib/filePaths.ts";
@@ -688,7 +687,6 @@ export function App() {
         </div>
       </header>
 
-      <UpdateNotice updates={updates} onOpen={() => setSettingsOpen(true)} />
       <MachineActionBanner machines={machines} onSetup={(machine, update = false) => { setDrawerOpen(false); setUpdateRemote(update); setMachineDialog(machine); }} />
       <div className="app-body">
         <aside id="workspace-drawer" className={`sidebar${drawerOpen ? " is-open" : ""}`}>

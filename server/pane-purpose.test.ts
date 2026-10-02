@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, renameSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -30,5 +30,21 @@ describe("PanePurposes", () => {
     const broken = join(dir, "pane-purpose.json");
     writeFileSync(broken, "{ not json");
     expect(new PanePurposes(broken).apply(original)).toBe(original);
+  });
+
+  test("tells when the registry is replaced by rename", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "purpose-"));
+    const file = join(dir, "pane-purpose.json");
+    const purposes = new PanePurposes(file);
+    let calls = 0;
+    purposes.start(() => { calls += 1; });
+    try {
+      writeFileSync(`${file}.tmp`, JSON.stringify({ "w1:p1": "new" }));
+      renameSync(`${file}.tmp`, file);
+      await Bun.sleep(800);
+      expect(calls).toBe(1);
+    } finally {
+      purposes.stop();
+    }
   });
 });

@@ -32,6 +32,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+## Pretendard
+
+The UI font is Pretendard Variable from the [`pretendard`](https://www.npmjs.com/package/pretendard)
+package v1.3.9 (`dist/web/variable/pretendardvariable-dynamic-subset.css` and its woff2 subsets),
+by [orioncactus/pretendard](https://github.com/orioncactus/pretendard), distributed under the
+SIL Open Font License 1.1 (https://openfontlicense.org). The fonts are bundled unmodified.
+
 ## Nerd Fonts Symbols Only
 
 `src/fonts/SymbolsNerdFontMono-Regular.woff2` is Symbols Nerd Font Mono from the

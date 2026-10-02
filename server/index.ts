@@ -7,6 +7,7 @@ import type { ServerWebSocket } from "bun";
 import type { AgentKind, AgentStatus, ClientMessage, ClientRole, HealthAuth, HerdrPane, ServerFeature, ServerMessage, SessionSnapshot } from "../shared/protocol.ts";
 import { paneTitle } from "../shared/notify-policy.ts";
 import { DEFAULT_PORT } from "../shared/protocol.ts";
+import { PanePurposes } from "./pane-purpose.ts";
 import { DEVICE_COOKIE, handleAuthRequest, isAuthenticated, parseCookies, requiresAuth, unauthorizedJson } from "./auth.ts";
 import { cameThroughProxy, decideAccess, isLoopbackAddress } from "./access.ts";
 import { DeviceStore, handleDeviceRequest } from "./devices.ts";
@@ -427,9 +428,10 @@ export function createServer(
     await omo.refresh(snapshot.panes);
     return omo.apply(snapshot);
   };
-  /** the snapshot clients get: finishes settled, OmO panes named, their running background tasks counted */
+  const purposes = new PanePurposes();
+  /** the snapshot clients get: finishes settled, OmO panes named, their running background tasks counted, purposes attached */
   const clientSnapshot = async (): Promise<SessionSnapshot> => {
-    const snapshot = await completions.readSnapshot(rawSnapshot);
+    const snapshot = purposes.apply(await completions.readSnapshot(rawSnapshot));
     if (!snapshot.panes.some((pane) => omo.backgroundOf(pane.pane_id) > 0)) return snapshot;
     return { ...snapshot, panes: snapshot.panes.map((pane) => omo.backgroundOf(pane.pane_id) > 0 ? { ...pane, background_tasks: omo.backgroundOf(pane.pane_id) } : pane) };
   };
@@ -790,6 +792,8 @@ export function createServer(
     onStructureChange: () => broadcastAll({ type: "session-changed" }),
   }, { snapshot: rawSnapshot });
   omo.start();
+  // a pane names its purpose after it starts: clients refetch the session to show it
+  purposes.start(() => broadcastAll({ type: "session-changed" }));
 
   const envPort = process.env["PORT"];
   const server = Bun.serve<SocketData>({
@@ -1681,6 +1685,7 @@ export function createServer(
       clearInterval(outputTimer);
       collector.stop();
       omo.stop();
+      purposes.stop();
       machines?.stop();
       registration?.close();
       for (const paneId of [...attachments.keys()]) closeAttachment(paneId);

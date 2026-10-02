@@ -13,6 +13,7 @@ import { AgentMark } from "./AgentMark.tsx";
 import { UsageMeters } from "./UsageMeters.tsx";
 import { useT } from "../lib/i18n.ts";
 import { groupDirectories } from "../lib/directoryGroups.ts";
+import { tabTree } from "../lib/tabTree.ts";
 import { useSettings, type SidebarGrouping } from "../lib/settings.ts";
 
 const CLOSE_ARM_MS = 3000;
@@ -43,9 +44,13 @@ function stripPaneChrome(title: string, agent: string | null | undefined): strin
 
 export { paneTitle };
 
-/** The title a row or the header shows: the user's label, else the live title minus its chrome. */
+/**
+ * The title a row or the header shows: the pane's purpose, else its label, else the live title
+ * minus its chrome. Purpose first, as herdr's radar sidebar does: labels are often generic
+ * ("Claude Code") while the purpose is what the agent says it is doing now.
+ */
 export function displayPaneTitle(pane: PaneInfo): string {
-  return pane.label?.trim() || stripPaneChrome(paneTitle(pane), pane.agent) || pane.pane_id;
+  return (pane as HerdrPane).purpose || pane.label?.trim() || stripPaneChrome(paneTitle(pane), pane.agent) || pane.pane_id;
 }
 
 /** herdr could not bring this pane back after a restart (0.9.3+ `restore_error`): its reason, on hover. */
@@ -343,13 +348,13 @@ export function Sidebar({ snapshot, selectedPaneId, actions, version, embedded =
         )}
 
         {!collapsed && <ul className="pane-list">
-          {visiblePanes.map((pane) => {
+          {tabTree(visiblePanes).map(({ pane, depth, last }) => {
             const fullTitle = paneTitle(pane);
             const displayTitle = displayPaneTitle(pane);
             const selected = pane.pane_id === selectedPaneId;
             const editing = editingPaneId === pane.pane_id;
             return (
-              <li className={`pane-item${selected ? " is-selected" : ""}`} key={pane.pane_id}>
+              <li className={`pane-item${selected ? " is-selected" : ""}${depth ? " is-child" : ""}`} key={pane.pane_id}>
                 <div className="pane-row">
                   {merged && dragHandle(workspace, true)}
                   <div
@@ -365,6 +370,7 @@ export function Sidebar({ snapshot, selectedPaneId, actions, version, embedded =
                       actions.selectPane(pane.pane_id);
                     }}
                   >
+                    {depth === 1 && <span className="pane-branch" aria-hidden="true">{last ? "└" : "├"}</span>}
                     <span className={`agent-mark-holder${pane.agent ? "" : " is-shell"}`} title={pane.agent ?? t("Shell")}>
                       {pane.agent ? <AgentMark agent={pane.agent} size={22} /> : <Terminal aria-hidden="true" />}
                     </span>

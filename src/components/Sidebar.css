@@ -328,6 +328,18 @@
   background: var(--accent);
 }
 
+/* a pane under its tab's first agent (src/lib/tabTree.ts): indented, with a branch line */
+.pane-item.is-child .pane-row {
+  padding-left: calc(var(--space-4) + var(--space-3));
+}
+
+.pane-branch {
+  flex: 0 0 auto;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
 .pane-select {
   display: flex;
   align-items: center;

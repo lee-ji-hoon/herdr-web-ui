@@ -1,4 +1,5 @@
 import type { PaneInfo, WorkspaceInfo } from "../../shared/protocol.ts";
+import { tabTree } from "./tabTree.ts";
 
 export interface DirectoryGroup {
   key: string;
@@ -18,15 +19,17 @@ export function directoryPath(cwd: string | null | undefined): string | null {
 /** Called separately for each PC; unknown directories stay with their own workspace. */
 export function groupDirectories(workspaces: WorkspaceInfo[], panes: PaneInfo[]): DirectoryGroup[] {
   const byWorkspace = new Map<string, PaneInfo[]>();
+  const roots = new Map(tabTree(panes).map(({ pane, root }) => [pane.pane_id, root]));
   for (const pane of panes) {
-    const siblings = byWorkspace.get(pane.workspace_id) ?? [];
+    const workspace = roots.get(pane.pane_id)?.workspace_id ?? pane.workspace_id;
+    const siblings = byWorkspace.get(workspace) ?? [];
     siblings.push(pane);
-    byWorkspace.set(pane.workspace_id, siblings);
+    byWorkspace.set(workspace, siblings);
   }
   const groups = new Map<string, DirectoryGroup>();
   for (const workspace of workspaces) {
     for (const pane of byWorkspace.get(workspace.workspace_id) ?? []) {
-      const path = directoryPath(pane.cwd);
+      const path = directoryPath(roots.get(pane.pane_id)?.cwd);
       const key = path === null ? `workspace:${workspace.workspace_id}` : `directory:${path}`;
       let group = groups.get(key);
       if (!group) {

@@ -6,6 +6,19 @@ const workspace = (id: string): WorkspaceInfo => ({ workspace_id: id, label: id,
 const pane = (id: string, workspaceId: string, cwd?: string | null): PaneInfo => ({ pane_id: id, workspace_id: workspaceId, cwd, tab_id: `${workspaceId}:t1`, terminal_id: id, revision: 1, focused: false, agent_status: "idle" });
 
 describe("groupDirectories", () => {
+  it("keeps an explicit worktree child with its parent without changing its native workspace or cwd", () => {
+    const main = { ...pane("main", "w1", "/project"), agent: "codex" };
+    const child = { ...pane("child", "w2", "/project/.worktrees/task"), agent: "codex", parent_pane_id: "main" };
+    const input = [main, child], before = structuredClone(input);
+    const groups = groupDirectories([workspace("w1"), workspace("w2")], input);
+    expect(groups.map((g) => [g.path, g.paneCount])).toEqual([["/project", 2]]);
+    expect(groups[0]?.workspaces[0]?.panes.map((p) => p.pane_id)).toEqual(["main", "child"]);
+    expect(input).toEqual(before);
+    const unknownParent = { ...main, cwd: null };
+    const unknownGroups = groupDirectories([workspace("w1"), workspace("w2")], [unknownParent, child]);
+    expect(unknownGroups.map((g) => [g.key, g.paneCount])).toEqual([["workspace:w1", 2]]);
+    expect(unknownGroups[0]?.workspaces[0]?.panes.map((p) => p.pane_id)).toEqual(["main", "child"]);
+  });
   it("merges sessions from separate workspaces at the same full path", () => {
     const groups = groupDirectories([workspace("w1"), workspace("w2")], [pane("p1", "w1", "/project"), pane("p2", "w2", "/project/")]);
     expect(groups).toHaveLength(1);

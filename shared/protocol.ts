@@ -28,7 +28,7 @@ import type { AgentStatus, PaneInfo, SessionSnapshot, TabInfo, WorkspaceInfo } f
 export type HerdrWorkspace = WorkspaceInfo;
 export type HerdrTab = TabInfo;
 /** `background_tasks`: an OmO pane's `task` children still running, counted by the server; absent when none */
-export type HerdrPane = PaneInfo & { background_tasks?: number; /** what the pane is for, from the pane purpose registry (server/pane-purpose.ts) */ purpose?: string };
+export type HerdrPane = PaneInfo & { background_tasks?: number; /** what the pane is for, from the pane purpose registry (server/pane-purpose.ts) */ purpose?: string; /** UI origin validated against current native session/terminal identities. */ parent_pane_id?: string; worktree_branch?: string };
 
 export type { Machine, MachineEvent, PaneTarget, SetupJob, SetupRequest, SetupAction, BridgeIdentity, BridgeHealth } from "./machines.ts";
 

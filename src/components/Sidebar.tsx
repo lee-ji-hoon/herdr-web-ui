@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent } from "react";
-import { ChevronDown, ChevronRight, Download, Folder, GripVertical, Layers, Pencil, Plus, Settings, Terminal, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Download, Folder, GitBranch, GripVertical, Layers, Pencil, Plus, Settings, Terminal, X } from "lucide-react";
 
 import "./Sidebar.css";
 
@@ -49,8 +49,14 @@ export { paneTitle };
  * minus its chrome. Purpose first, as herdr's radar sidebar does: labels are often generic
  * ("Claude Code") while the purpose is what the agent says it is doing now.
  */
-export function displayPaneTitle(pane: PaneInfo): string {
-  return (pane as HerdrPane).purpose || pane.label?.trim() || stripPaneChrome(paneTitle(pane), pane.agent) || pane.pane_id;
+export function displayPaneTitle(pane: PaneInfo, child = false): string {
+  const title = (pane as HerdrPane).purpose || pane.label?.trim() || stripPaneChrome(paneTitle(pane), pane.agent) || pane.pane_id;
+  if (!child) return title;
+  const folder = cwdBasename(pane.cwd);
+  const bar = title.match(/^(.*\S)\s+\|\s+([^|]+?)\s*$/);
+  const suffix = bar?.[2]?.replace(/(?:\.\.\.|…)$/, "");
+  if (bar && suffix && (folder === suffix || (/(?:\.\.\.|…)$/.test(bar[2]!) && folder.startsWith(suffix)))) return bar[1]!.trim();
+  return title === pane.cwd || title === folder ? pane.agent || "Shell" : title;
 }
 
 /** herdr could not bring this pane back after a restart (0.9.3+ `restore_error`): its reason, on hover. */
@@ -169,7 +175,8 @@ export function Sidebar({ snapshot, selectedPaneId, actions, version, embedded =
     if (!pane) return;
     const directory = byFolder ? groupDirectories(snapshot.workspaces, snapshot.panes).find((group) => group.workspaces.some((entry) => entry.panes.some((pane) => pane.pane_id === selectedPaneId))) : null;
     if (byFolder && !directory) return;
-    const groupKey = directory ? `folder:${directory.key}` : `workspace:${pane.workspace_id}`;
+    const root = tabTree(snapshot.panes).find((row) => row.pane.pane_id === pane.pane_id)?.root;
+    const groupKey = directory ? `folder:${directory.key}` : `workspace:${root?.workspace_id ?? pane.workspace_id}`;
     const opened = JSON.stringify([machineId, selectedPaneId, groupKey]);
     if (unfoldedFor.current[settings.sidebarGrouping] === opened) return;
     unfoldedFor.current[settings.sidebarGrouping] = opened;
@@ -182,6 +189,7 @@ export function Sidebar({ snapshot, selectedPaneId, actions, version, embedded =
     return workspaceOrder.map((id) => byId.get(id)).filter((workspace): workspace is WorkspaceInfo => workspace !== undefined);
   }, [snapshot, workspaceOrder]);
   const directories = useMemo(() => groupDirectories(orderedWorkspaces, snapshot?.panes ?? []), [orderedWorkspaces, snapshot?.panes]);
+  const tree = useMemo(() => tabTree(snapshot?.panes ?? []), [snapshot?.panes]);
   const workspacePaneCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const pane of snapshot?.panes ?? []) counts.set(pane.workspace_id, (counts.get(pane.workspace_id) ?? 0) + 1);
@@ -297,7 +305,7 @@ export function Sidebar({ snapshot, selectedPaneId, actions, version, embedded =
     // separate workspace heading only when it groups several panes. Count the
     // whole workspace: a folder can show one pane of a workspace that has more,
     // and that heading is the only place to rename the workspace.
-    const merged = (workspacePaneCounts.get(workspace.workspace_id) ?? visiblePanes.length) === 1;
+    const merged = visiblePanes.length === 1 && (workspacePaneCounts.get(workspace.workspace_id) ?? visiblePanes.length) === 1;
     const groupKey = `workspace:${workspace.workspace_id}`;
     const collapsed = !byFolder && !merged && collapsedGroups.has(groupKey);
     return (
@@ -348,13 +356,13 @@ export function Sidebar({ snapshot, selectedPaneId, actions, version, embedded =
         )}
 
         {!collapsed && <ul className="pane-list">
-          {tabTree(visiblePanes).map(({ pane, depth, last }) => {
+          {tree.filter(row => visiblePanes.some(pane => pane.pane_id === row.pane.pane_id)).map(({ pane, depth, parent, last, continuations }) => {
             const fullTitle = paneTitle(pane);
-            const displayTitle = displayPaneTitle(pane);
+            const displayTitle = displayPaneTitle(pane, depth > 0);
             const selected = pane.pane_id === selectedPaneId;
             const editing = editingPaneId === pane.pane_id;
             return (
-              <li className={`pane-item${selected ? " is-selected" : ""}${depth ? " is-child" : ""}`} key={pane.pane_id}>
+              <li className={`pane-item${selected ? " is-selected" : ""}${depth ? " is-child" : ""}`} key={pane.pane_id} data-pane-id={pane.pane_id} data-parent-pane-id={parent?.pane_id} data-depth={depth}>
                 <div className="pane-row">
                   {merged && dragHandle(workspace, true)}
                   <div
@@ -370,7 +378,8 @@ export function Sidebar({ snapshot, selectedPaneId, actions, version, embedded =
                       actions.selectPane(pane.pane_id);
                     }}
                   >
-                    {depth === 1 && <span className="pane-branch" aria-hidden="true">{last ? "└" : "├"}</span>}
+                    {continuations.map((continued, index) => <span className={`pane-stem${continued ? " is-continuing" : ""}`} aria-hidden="true" key={index} />)}
+                    {depth > 0 && <span className={`pane-branch${last ? " is-last" : ""}`} aria-hidden="true" />}
                     <span className={`agent-mark-holder${pane.agent ? "" : " is-shell"}`} title={pane.agent ?? t("Shell")}>
                       {pane.agent ? <AgentMark agent={pane.agent} size={22} /> : <Terminal aria-hidden="true" />}
                     </span>
@@ -398,7 +407,8 @@ export function Sidebar({ snapshot, selectedPaneId, actions, version, embedded =
                       <span className="pane-meta">
                         {pane.restore_error ? <RestoreErrorBadge reason={pane.restore_error} /> : <StatusBadge status={pane.agent_status} />}
                         <BackgroundBadge count={(pane as HerdrPane).background_tasks} />
-                        <span className="pane-subtitle">{byFolder ? workspace.label : `${workspace.label} · ${cwdBasename(pane.cwd)}`}</span>
+                        {depth === 0 && <span className="pane-subtitle">{byFolder ? workspace.label : `${workspace.label} · ${cwdBasename(pane.cwd)}`}</span>}
+                        {depth > 0 && (pane as HerdrPane).worktree_branch && <span className="pane-branch-name" title={(pane as HerdrPane).worktree_branch}><GitBranch aria-hidden="true" />{(pane as HerdrPane).worktree_branch}</span>}
                       </span>
                     </span>
                   </div>
@@ -454,7 +464,7 @@ export function Sidebar({ snapshot, selectedPaneId, actions, version, embedded =
               return renderWorkspace(workspace, visiblePanes, directory.key);
         })}</div>}
           </section>;
-        }) : orderedWorkspaces.map((workspace) => renderWorkspace(workspace, snapshot?.panes.filter((pane) => pane.workspace_id === workspace.workspace_id) ?? []))}
+        }) : orderedWorkspaces.map((workspace) => renderWorkspace(workspace, tree.filter((row) => row.root.workspace_id === workspace.workspace_id).map((row) => row.pane)))}
         {inlineError && inlineError.paneId === undefined && (
           <p className="sidebar-inline-error" role="alert">{inlineError.message}</p>
         )}

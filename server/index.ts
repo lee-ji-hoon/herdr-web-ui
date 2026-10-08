@@ -8,6 +8,7 @@ import type { AgentKind, AgentStatus, ClientMessage, ClientRole, HealthAuth, Her
 import { paneTitle } from "../shared/notify-policy.ts";
 import { DEFAULT_PORT } from "../shared/protocol.ts";
 import { PanePurposes } from "./pane-purpose.ts";
+import { PaneOrigins } from "./pane-origins.ts";
 import { DEVICE_COOKIE, handleAuthRequest, isAuthenticated, parseCookies, requiresAuth, unauthorizedJson } from "./auth.ts";
 import { cameThroughProxy, decideAccess, isLoopbackAddress } from "./access.ts";
 import { DeviceStore, handleDeviceRequest } from "./devices.ts";
@@ -429,9 +430,10 @@ export function createServer(
     return omo.apply(snapshot);
   };
   const purposes = new PanePurposes();
+  const origins = new PaneOrigins();
   /** the snapshot clients get: finishes settled, OmO panes named, their running background tasks counted, purposes attached */
   const clientSnapshot = async (): Promise<SessionSnapshot> => {
-    const snapshot = purposes.apply(await completions.readSnapshot(rawSnapshot));
+    const snapshot = origins.apply(purposes.apply(await completions.readSnapshot(rawSnapshot)));
     if (!snapshot.panes.some((pane) => omo.backgroundOf(pane.pane_id) > 0)) return snapshot;
     return { ...snapshot, panes: snapshot.panes.map((pane) => omo.backgroundOf(pane.pane_id) > 0 ? { ...pane, background_tasks: omo.backgroundOf(pane.pane_id) } : pane) };
   };

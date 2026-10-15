@@ -6,6 +6,16 @@
  * braces keep their English names.
  */
 export const KO: Record<string, string> = {
+  "Saved Codex accounts": "저장된 Codex 계정",
+  "Could not load saved Codex accounts.": "저장된 Codex 계정을 불러오지 못했습니다.",
+  "Account switched. Restart Codex to apply it to an existing session.": "계정을 전환했습니다. 기존 세션에 적용하려면 Codex를 다시 시작하세요.",
+  "This Codex account is already active.": "이미 사용 중인 Codex 계정입니다.",
+  "Switch not confirmed. Reload the account list before trying again.": "전환을 확인하지 못했습니다. 다시 시도하기 전에 계정 목록을 새로 불러오세요.",
+  "Switching applies to new Codex sessions on this PC.": "전환은 이 PC의 새 Codex 세션에 적용됩니다.",
+  "Active account": "현재 계정",
+  "Switch account": "계정 전환",
+  "Account switching is unavailable on this PC.": "이 PC에서는 계정 전환을 사용할 수 없습니다.",
+
   "Password or PIN": "비밀번호 또는 PIN",
   "Enter a single-line password or PIN.": "한 줄의 비밀번호 또는 PIN을 입력하세요.",
   "Update this PC to use masked input.": "비밀번호 입력창을 사용하려면 이 PC의 앱을 업데이트하세요.",

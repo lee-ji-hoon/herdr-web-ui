@@ -7,6 +7,7 @@ import type { ProviderUsage, UsageWindow } from "../../shared/protocol.ts";
 import { useT, type Translate } from "../lib/i18n.ts";
 import { useSettings, type UsageCount } from "../lib/settings.ts";
 import { formatPercent, formatResetIn, HIGH_PERCENT, meterPercent, meterText, orderProviders, PROVIDER_MARK, PROVIDER_NAME, tightestWindow, usageName, useUsage, windowLabel } from "../lib/usage.ts";
+import { CodexAccounts } from "./CodexAccounts.tsx";
 import { AgentMark } from "./AgentMark.tsx";
 
 /** chips the strip beside Settings holds before the rest fold into "+N" */
@@ -152,6 +153,7 @@ export function UsageMeters() {
             </button>
           </header>
           {shown.map((usage) => <Provider key={usage.key} usage={usage} now={now} count={count} />)}
+          <CodexAccounts />
         </div>
       )}
     </div>
@@ -221,6 +223,7 @@ export function UsagePanel() {
             </button>
           </header>
           {shown.map((usage) => <Provider key={usage.key} usage={usage} now={now} count={count} />)}
+          <CodexAccounts />
         </div>
       )}
     </section>

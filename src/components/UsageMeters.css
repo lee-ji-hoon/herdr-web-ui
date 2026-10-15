@@ -112,7 +112,8 @@
   to { transform: rotate(360deg); }
 }
 
-.usage-provider {
+.usage-provider,
+.codex-accounts {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -350,3 +351,8 @@
   border-top: var(--hairline) solid var(--border);
   padding-top: var(--space-2);
 }
+
+.codex-account-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+.codex-account-row > span { overflow-wrap: anywhere; }
+.codex-account-row button { flex-shrink: 0; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elevated); color: var(--text); }
+.codex-account-row button:disabled { opacity: .6; }

@@ -10,6 +10,16 @@
  * Placeholders in braces keep their English names.
  */
 export const ZH: Record<string, string> = {
+  "Saved Codex accounts": "已保存的 Codex 账户",
+  "Could not load saved Codex accounts.": "无法加载已保存的 Codex 账户。",
+  "Account switched. Restart Codex to apply it to an existing session.": "账户已切换。请重启 Codex 以应用到现有会话。",
+  "This Codex account is already active.": "此 Codex 账户已处于活动状态。",
+  "Switch not confirmed. Reload the account list before trying again.": "未确认切换。请先重新加载账户列表再重试。",
+  "Switching applies to new Codex sessions on this PC.": "切换将应用于此电脑上的新 Codex 会话。",
+  "Active account": "当前账户",
+  "Switch account": "切换账户",
+  "Account switching is unavailable on this PC.": "此电脑不支持账户切换。",
+
   "Password or PIN": "密码或 PIN",
   "Enter a single-line password or PIN.": "请输入不含换行的密码或 PIN。",
   "Update this PC to use masked input.": "请更新此电脑上的应用以使用密码输入框。",

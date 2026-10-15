@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { createServer } from "./index.ts";
 import type { AgentKind, AgentStatus, ApiError, HealthAuth, PushKey, RemoteAccess, SessionSnapshot, PaneReadResult, UsageReport, WorkspaceCreated } from "../shared/protocol.ts";
+import { CodexAccountService } from "./codex-accounts.ts";
 import { UsageService } from "./usage.ts";
 import { VoiceService } from "./voice.ts";
 import { herdrRpc, ping, workspaceCreate, workspaceClose } from "./herdr/client.ts";
@@ -1694,4 +1695,21 @@ it("refuses cross-origin changes while allowing same-origin and CLI requests", a
       expect(response.status).toBe(200);
     }
   } finally { instance.stop(); await workspaceClose(created.workspace.workspace_id); rmSync(root, { recursive: true, force: true }); }
+});
+
+
+describe("Codex account API", () => {
+  it("requires authentication and refuses cross-origin switching before calling the manager", async () => {
+    const state = mkdtempSync(join(tmpdir(), "herdr-account-contract-"));
+    let calls = 0;
+    const accounts = new CodexAccountService(state, async () => { calls++; return null; });
+    const app = createServer({ port: 0, stateDir: state, token: "account-test-token", codexAccounts: accounts, usage: new UsageService(undefined, []) });
+    const url = `http://localhost:${app.port}/api/codex-accounts`;
+    try {
+      expect((await fetch(url)).status).toBe(401);
+      expect(await (await fetch(url, { headers: { authorization: "Bearer account-test-token" } })).json()).toEqual({ accounts: [], switchAvailable: false });
+      expect((await fetch(url, { method: "POST", headers: { authorization: "Bearer account-test-token", "sec-fetch-site": "cross-site", "content-type": "application/json" }, body: '{"id":"two"}' })).status).toBe(403);
+      expect(calls).toBe(0);
+    } finally { app.stop(); rmSync(state, { recursive: true, force: true }); }
+  });
 });

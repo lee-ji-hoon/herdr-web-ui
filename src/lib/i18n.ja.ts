@@ -8,6 +8,16 @@
  * in English. Placeholders in braces keep their English names.
  */
 export const JA: Record<string, string> = {
+  "Saved Codex accounts": "保存済み Codex アカウント",
+  "Could not load saved Codex accounts.": "保存済み Codex アカウントを読み込めませんでした。",
+  "Account switched. Restart Codex to apply it to an existing session.": "アカウントを切り替えました。既存のセッションに適用するには Codex を再起動してください。",
+  "This Codex account is already active.": "この Codex アカウントは既に使用中です。",
+  "Switch not confirmed. Reload the account list before trying again.": "切り替えを確認できませんでした。再試行する前にアカウント一覧を再読み込みしてください。",
+  "Switching applies to new Codex sessions on this PC.": "切り替えはこの PC の新しい Codex セッションに適用されます。",
+  "Active account": "使用中のアカウント",
+  "Switch account": "アカウントを切り替え",
+  "Account switching is unavailable on this PC.": "この PC ではアカウントを切り替えられません。",
+
   "Password or PIN": "パスワードまたは PIN",
   "Enter a single-line password or PIN.": "改行を含まないパスワードまたは PIN を入力してください。",
   "Update this PC to use masked input.": "伏せ字の入力欄を使うには、この PC のアプリを更新してください。",

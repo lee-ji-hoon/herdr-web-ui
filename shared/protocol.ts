@@ -107,6 +107,7 @@ export type { Machine, MachineEvent, PaneTarget, SetupJob, SetupRequest, SetupAc
  *  POST   /api/push/subscribe { subscription }  -> 204 (a browser PushSubscription JSON; upsert by endpoint)
  *  DELETE /api/push/subscribe { endpoint }      -> 204
  *  POST   /api/push/test      { endpoint }      -> 204 | 404 subscription_not_found | 502 push_failed
+ *  GET/POST /api/codex-accounts        -> saved Codex accounts / verified switch (shared/codex-accounts.ts)
  *  GET    /api/usage[?refresh=1]         -> UsageReport (plan limits of the AI subscriptions signed in on this PC)
  *  Errors: non-2xx with { error: { code, message } }
  *

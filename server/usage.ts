@@ -15,6 +15,7 @@
  * MIN_REFRESH_MS. A provider that answered 429 is not asked again before it said to.
  */
 
+import { codexSlots } from "./codex-accounts.ts";
 import { Database } from "bun:sqlite";
 import { createHash } from "node:crypto";
 import { closeSync, mkdtempSync, openSync, readdirSync, readSync, rmSync, writeFileSync, writeSync } from "node:fs";
@@ -344,6 +345,10 @@ const codex: UsageProvider = {
     for (const home of new Set(homes.filter((home): home is string => Boolean(home)))) {
       const signIn = codexSignIn(readText(join(home, "auth.json")));
       if (signIn) found.push({ ...signIn, source: home });
+    }
+    for (const slot of codexSlots(ctx.home)) {
+      const signIn = codexSignIn(readText(slot.path));
+      if (signIn) found.push({ ...signIn, source: slot.path });
     }
     return found.length ? found : keychainFound(await fromKeychain(ctx, "Codex Auth", [undefined], codexSignIn), "keychain");
   },

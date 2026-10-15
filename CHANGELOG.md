@@ -7,6 +7,9 @@ between releases do not reach them. Remote-PC runtime bundles are versioned sepa
 
 ## [Unreleased]
 
+### Added
+- Saved Codex accounts from the account manager appear in subscription usage. Switch accounts from the expanded usage panel, with active-auth readback and a restart notice for existing sessions.
+
 ## [0.3.43] - 2026-10-02
 
 ### Changed

@@ -29,6 +29,18 @@ const REPORT: UsageReport = {
 
 async function staged(context: BrowserContext): Promise<string[]> {
   const asked: string[] = [];
+  let active = "one";
+  await context.route("**/api/codex-accounts", (route) => {
+    if (route.request().method() === "POST") {
+      const id = route.request().postDataJSON().id;
+      assert.equal(id, "two"); active = id;
+      return route.fulfill({ json: { ok: true, activeAccountID: id, restartRequired: true } });
+    }
+    return route.fulfill({ json: { switchAvailable: true, accounts: [
+      { id: "one", label: "First account", active: active === "one" },
+      { id: "two", label: "Added account", active: active === "two" },
+    ] } });
+  });
   await context.route("**/api/usage*", (route) => {
     asked.push(new URL(route.request().url()).search);
     return route.fulfill({ json: REPORT });
@@ -72,6 +84,12 @@ export async function checkUsageMeters(browser: Browser, origin: string): Promis
     const popover = page.getByRole("dialog", { name: "Subscription usage", exact: true });
     await popover.waitFor();
     assert.equal(await popover.locator(".usage-provider").count(), 7);
+    const saved = popover.getByRole("region", { name: "Saved Codex accounts" });
+    await saved.getByText("Added account", { exact: true }).waitFor();
+    await saved.getByRole("button", { name: "Switch account", exact: true }).click();
+    await saved.getByRole("status").filter({ hasText: "Restart Codex" }).waitFor();
+    assert.equal(await saved.locator(".codex-account-row").filter({ hasText: "Added account" }).getByRole("button").textContent(), "Active account");
+
     assert.equal(await popover.getByRole("meter").count(), 9);
     assert.equal(await popover.locator(".usage-account").first().textContent(), "me@work.example");
     assert.equal(await popover.locator(".usage-row.is-high").count(), 1);
@@ -137,6 +155,12 @@ export async function checkUsageMeters(browser: Browser, origin: string): Promis
     await page.locator(".usage-strip").click();
     const popover = page.getByRole("dialog", { name: "Subscription usage", exact: true });
     await popover.waitFor();
+    const savedAccounts = popover.getByRole("region", { name: "Saved Codex accounts" });
+    await savedAccounts.scrollIntoViewIfNeeded();
+    await savedAccounts.getByRole("button", { name: "Switch account", exact: true }).click();
+    await savedAccounts.getByRole("status").filter({ hasText: "Restart Codex" }).waitFor();
+    assert.equal(await savedAccounts.evaluate((element) => element.scrollWidth <= element.clientWidth), true, "saved account rows fit the phone");
+    if (process.env.UI_EVIDENCE_DIR) await savedAccounts.screenshot({ path: join(process.env.UI_EVIDENCE_DIR, "codex-accounts-phone.png") });
     const box = await popover.boundingBox();
     assert.ok(box && box.x >= 0 && box.y >= 0 && box.x + box.width <= 390, "the popover stays inside the phone's screen");
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);

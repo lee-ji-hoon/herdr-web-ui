@@ -160,7 +160,7 @@ export async function checkUsageMeters(browser: Browser, origin: string): Promis
     await savedAccounts.getByRole("button", { name: "Switch account", exact: true }).click();
     await savedAccounts.getByRole("status").filter({ hasText: "Restart Codex" }).waitFor();
     assert.equal(await savedAccounts.evaluate((element) => element.scrollWidth <= element.clientWidth), true, "saved account rows fit the phone");
-    if (process.env.UI_EVIDENCE_DIR) await popover.screenshot({ path: join(process.env.UI_EVIDENCE_DIR, "codex-accounts-phone.png") });
+    if (process.env.UI_EVIDENCE_DIR) await savedAccounts.screenshot({ path: join(process.env.UI_EVIDENCE_DIR, "codex-accounts-phone.png") });
     const box = await popover.boundingBox();
     assert.ok(box && box.x >= 0 && box.y >= 0 && box.x + box.width <= 390, "the popover stays inside the phone's screen");
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
